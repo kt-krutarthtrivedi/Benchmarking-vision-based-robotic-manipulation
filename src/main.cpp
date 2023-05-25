@@ -2,10 +2,7 @@
 Project : GRASPING OF UNKNOWN OBJECTS USING TOP SURFACES FROM A TABLE TOP
 Description : This project covers a grasping system for unknown objects placed on a table. Grasp points based on object shape are calculated for each 
               individual object. 
-Contributors: Ashwij Kumbla (akumbla@wpi.edu)
-              Anoushka Baidya (abaidya@wpi.edu)
-              Purvang Patel (pppatel@wpi.edu)
-              Krutarth Ambarish Trivedi (ktrivedi@wpi.edu)
+Contributor: Krutarth Ambarish Trivedi (ktrivedi@wpi.edu)
 */
 
 #include "rclcpp/rclcpp.hpp"
