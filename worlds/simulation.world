@@ -1,0 +1,81 @@
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <!-- We use a custom world for the rrbot so that the camera angle is launched correctly -->
+
+  <world name="default">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Objects -->
+    <include>
+        <uri>model://table</uri>
+        <pose>0 0 -0.5 0 0 1.57</pose>
+    </include>
+
+    <include>
+        <uri>model://beer</uri>
+        <pose>0 0.2 0.8 0 0 0</pose>
+    </include>
+
+    <include>
+        <uri>model://cricket_ball</uri>
+        <pose>0 0 0.8 0 0 0</pose>
+    </include>
+  
+    <include>
+        <uri>model://gasket_part</uri>
+        <pose>0.05 0.5 0.8 0 0 1.57</pose>
+    </include>
+  
+    <include>
+        <uri>model://hammer</uri>
+        <pose>0.1 -0.4 0.530 0 0 1.57</pose>
+    </include>
+
+    <include>
+        <uri>model://bowl</uri>
+        <pose>0.2 0.2 0.8 0 0 1.57</pose>
+    </include>
+
+    <include>
+        <uri>model://wood_cube_10cm</uri>
+        <pose>0.3 -0.6 0.8 0 0 1.57</pose>
+    </include>
+
+    <include>
+        <uri>model://cinder_block</uri>
+        <pose>-0.2 0.35 0.8 0 0 1.57</pose>
+    </include>
+
+    <include>
+        <uri>model://door_handle</uri>
+        <pose>0.3 0.5 0.8 0 0 1.57</pose>
+    </include>
+
+    <include>
+        <uri>model://coke_can</uri>
+        <pose>0.3 0.35 0.8 0 0 1.57</pose>
+    </include>
+
+    <include>
+        <uri>model://gear_part</uri>
+        <pose>-0.3 0 0.8 0 0 0</pose>
+    </include>
+
+    <include>
+        <uri>model://cross_joint_part</uri>
+        <pose>0.2 -0.15 0.8 0 0 1.57</pose>
+    </include>
+
+    <include>
+        <uri>model://cordless_drill</uri>
+        <pose>-0.3 -0.3 0.8 0 1.57 0</pose>
+    </include>
+  </world>
+</sdf>
