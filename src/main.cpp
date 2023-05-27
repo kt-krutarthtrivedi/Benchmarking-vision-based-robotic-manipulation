@@ -1,7 +1,6 @@
 /*
-Project : GRASPING OF UNKNOWN OBJECTS USING TOP SURFACES FROM A TABLE TOP
-Description : This project covers a grasping system for unknown objects placed on a table. Grasp points based on object shape are calculated for each 
-              individual object. 
+Description : Create a benchmarking perception software for detecting unknown objects placed on a table. Then, process the segmented objects to
+              calculate grasp points based on the object geometry.
 Contributor: Krutarth Ambarish Trivedi (ktrivedi@wpi.edu)
 */
 
@@ -30,10 +29,16 @@ using std::placeholders::_1;
 using Eigen::all;
 using namespace std::chrono_literals;
 
+/* A class to pre-process the point cloud data before performing data modeling */
 class PointCloudProcessing
 {
   public:
 
+    /*
+    @brief  Perform down sampling using a voxel grid filter
+    @param  CloudPtr  a pointcloud pointer
+    @return a down-sampled pointcloud pointer
+    */
     pcl::PCLPointCloud2::Ptr __VoxelDownSampling__(pcl::PCLPointCloud2::Ptr CloudPtr)const
     {
       pcl::VoxelGrid<pcl::PCLPointCloud2> VoxelGridFilter;
@@ -44,6 +49,11 @@ class PointCloudProcessing
       return pointCloudVoxOut;
     }
 
+    /*
+    @brief  Perform distance thresholding filter
+    @param  CloudPtr a pointcloud pointer
+    @return a filtered pointcloud pointer
+    */
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr __DistanceThresholding__(pcl::PCLPointCloud2::Ptr CloudPtr)const
     {
       pcl::PointCloud<pcl::PointXYZRGB>::Ptr xyzCloudPtr (new pcl::PointCloud<pcl::PointXYZRGB> ());
@@ -57,6 +67,11 @@ class PointCloudProcessing
       return xyzCloudPtrFiltered;   
     }
 
+    /*
+    @brief  Perform RANSAC to calculate inliers and their coefficients
+    @param  CloudPtr a pointcloud pointer
+    @return none
+    */
     void __RansacFiltering__(pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr, 
                             pcl::ModelCoefficients::Ptr coefficients, 
                             pcl::PointIndices::Ptr inliers)const
@@ -94,6 +109,11 @@ class PointCloudProcessing
       return cloud_projected;
     }
 
+    /*
+    @brief  Perform clustering to segment an object from a scene
+    @param  CloudPtr a pointcloud pointer
+    @return none
+    */
     std::vector<pcl::PointIndices> __Clustering__(pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr)const
     { 
       pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
@@ -111,6 +131,11 @@ class PointCloudProcessing
       return cluster_indices;
     }
 
+    /*
+    @brief  Perform distance thresholding to remove a depth of an object
+    @param  CloudPtr a pointcloud pointer
+    @return a filtered pointcloud pointer
+    */
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr __RemoveObjectDepth__(pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr)const
     {
       pcl::PointXYZRGB minPt, maxPt;
@@ -126,6 +151,11 @@ class PointCloudProcessing
       return cloud_filtered;
     }
 
+    /*
+    @brief  Project all the points on an object's base
+    @param  ClodPtr a pointcloud pointer
+    @return Projected pointcloud
+    */
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr __Projection__(pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr)const
     {
       pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_projected (new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -144,6 +174,11 @@ class PointCloudProcessing
       return cloud_projected;
     }
 
+    /*
+    @brief  Perform boundary estimation using pcl::BoundaryEstimation
+    @param  ClodPtr a pointcloud pointer
+    @return a pointcloud representing boundaries
+    */
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr __BoundaryEstimation__(pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr)const
     {
       pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
@@ -177,6 +212,7 @@ class PointCloudProcessing
     private:
 };
 
+/* A class to manage pointcloud read and write */
 class FileManagement
 {
   public:
@@ -188,15 +224,21 @@ class FileManagement
       writer.write(path, *CloudPtr, false); 
     }
   private:
-  // CAUTION: CHANGE THE DIRECTORY
-  std::string dir = "/home/purvang/Grasping-of-Unknown-Objects-using-Top-Surfaces/Media/" ;
+  // NB: CHANGE THE DIRECTORY
+  std::string dir = "/home/krutarth-trivedi/Benchmarking-vision-based-robotic-manipulation/Media" ; 
 };
 
+/* A class for calculating grasp points */
 class GraspQualityMatrix
 {
   public:
 
     /********** Heuristic based Grasp Quality Metric *************/
+    /*
+    @brief  Calculate centroid of a pointcloud
+    @param  ClodPtr a pointcloud pointer
+    @return a point representing a centroid
+    */
     Eigen::Matrix< float, 4, 1 > __CloundCentre__(pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr)const
     {
       Eigen::Matrix< float, 4, 1 > centroid;
@@ -211,6 +253,11 @@ class GraspQualityMatrix
       return centroid;
     }
 
+    /*
+    @brief  Calculate heuristic-based grasp points
+    @param  ClodPtr a pointcloud pointer
+    @return a pointcloud with synthesized grasp points
+    */
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr __FindGrasp__(pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr)const
     {
       float min_dis = FLT_MAX;
@@ -385,11 +432,7 @@ class GraspQualityMatrix
                     min_dis = dis;
                     index_point1 = i;
                     index_point2 = j;
-
-
                   }
-
-
                }
             }
           }
@@ -412,9 +455,6 @@ class GraspQualityMatrix
 
       return grasp_points_1;
     }
-
-
-    
 };
 
 class PointCloudSubscriber : public rclcpp::Node
@@ -633,17 +673,12 @@ private:
       for(size_t i = 0; i < cloud_normals->size(); i++) 
       {
         Eigen::Vector3f normal = cloud_normals->at(i).getNormalVector4fMap().head(3);
-        //Eigen::Vector3f normal_dup = cloud_normals->at(i).getNormalVector4fMap().head(3);
 
-        
-        
         pcl::flipNormalTowardsViewpoint(estimated_boundary->at(i), centroid[0], centroid[1], centroid[2], normal);
         normal_vector_matrix(0,i) = normal[0];
         normal_vector_matrix(1,i) = normal[1];
         normal_vector_matrix(2,i) = normal[2];
         
-
-        //const auto& pointMatrix = XYZcloud_filtered->at(i);
         point_cloud(0,i) = estimated_boundary->points[i].x;
         point_cloud(1,i) = estimated_boundary->points[i].y;
         point_cloud(2,i) = estimated_boundary->points[i].z;
@@ -653,8 +688,6 @@ private:
       pcl::copyPointCloud(*estimated_boundary, *cloud_vis_geo);
       const auto& grasp_points_1 =  graspQualityMatrix.getBestGraspContactPair(normal_vector_matrix,point_cloud,centroid.head(3),cloud_vis_geo);
  
-     
-
       /************* Publish Grasp Points alogn with the object cluster ******************/
       auto publish_grasp_msg = new sensor_msgs::msg::PointCloud2 ;
       pcl::PCLPointCloud2::Ptr publish_grasp(new pcl::PCLPointCloud2 ());
@@ -675,8 +708,7 @@ private:
       pcl_conversions::fromPCL(*publish_grasp_1, *publish_grasp_msg_1);  
       publish_grasp_msg_1->header.frame_id = "camera_link";
 
-
-       if(clusterID == 0)
+      if(clusterID == 0)
       {
         object_0->publish(*publish_object_msg);
         grasp_0->publish(*publish_grasp_msg);
@@ -748,7 +780,6 @@ private:
         grasp_11->publish(*publish_grasp_msg);
         grasp_11_G->publish(*publish_grasp_msg_1);
       }
-    
       clusterID++;
   
       /************************* Save Cloud Points as .pcd files ******************/

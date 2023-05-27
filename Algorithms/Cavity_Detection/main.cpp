@@ -24,12 +24,19 @@ Contributors: Krutarth Ambarish Trivedi (ktrivedi@wpi.edu);
 #include <pcl/sample_consensus/model_types.h>
 
 
-/*@brief: For calculating the grasp points using the same heuristic appraoch. 
-  @to-do: Fixes required in the existing algorithm as it's not working for the centroid not enclosed by the point clouds.
+/*
+@brief For calculating the grasp points using the heuristic appraoch. 
 */
 class GraspQualityMatrix
 {
   public:
+
+    /*
+    @brief calculate the centroid of the given point cloud and adds it to the same point cloud 
+          as the last point coloured in red.
+    @param CloudPtr a pointcloud pointer
+    @return none
+    */
     void __CloundCentre__(pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr)const
     {
       Eigen::Matrix< float, 4, 1 > centroid;
@@ -47,6 +54,11 @@ class GraspQualityMatrix
       CloudPtr->push_back(centroidpoint);
     }
 
+    /*
+    @brief find the grasp points based on the point cloud and its centroid
+    @param CloudPtr a pointcloud pointer
+    @return a new point cloud having two grasp points
+    */
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr __FindGrasp__(pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudPtr)const
     {
       float min_dis = FLT_MAX;
@@ -107,8 +119,11 @@ class GraspQualityMatrix
     }    
 };
 
-/*@brief: The novel cavity detection appraoch.
-  @to-do: Optimization is required.
+/*
+@brief  Estimate the cavity and find inner and outer boundaries from the object
+@param  InputBoundary a boundary representing an entire object
+@return  a point cloud representing a boundary creating cavities in the given object
+@to-do: Optimization is required.
 */
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr EstimateBoundary(pcl::PointCloud<pcl::PointXYZRGB>::Ptr InputBoundary)
 {
@@ -126,20 +141,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr EstimateBoundary(pcl::PointCloud<pcl::Poi
   for(int i = 0; i < InputBoundary->points.size(); i++)
   {
     pcl::PointXYZRGB searchPoint = InputBoundary->points[i];
-    // std::cout << "K nearest neighbor search at (" << searchPoint.x 
-    //           << " " << searchPoint.y 
-    //           << " " << searchPoint.z
-    //           << ") with K=" << K << std::endl;
 
     if ( kdtree.nearestKSearch (searchPoint, K, pointIdxNKNSearch, pointNKNSquaredDistance) > 0 )
     {
       for (std::size_t i = 0; i < pointIdxNKNSearch.size (); ++i)
       {
-        // std::cout << "    "  <<   (*InputBoundary)[ pointIdxNKNSearch[i] ].x 
-        //           << " " << (*InputBoundary)[ pointIdxNKNSearch[i] ].y 
-        //           << " " << (*InputBoundary)[ pointIdxNKNSearch[i] ].z 
-        //           << " (squared distance: " << pointNKNSquaredDistance[i] << ")" << std::endl;
-
         pcl::PointXYZRGB currentPoint = (*InputBoundary)[pointIdxNKNSearch[i]];
       
         stack.push_back(currentPoint);
@@ -222,20 +228,13 @@ int main (int argc, char** argv)
   {
     //Input and output Paths are hard-coded now as we know the object geometry and the algorithm's outer and inner boundary
     //detection are known to us. 
-    std::string inputPath = "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/Cavity_Detection/Media/object.pcd";
-    std::string outputPathFiltered = "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/Cavity_Detection/Media/filtered.pcd";
-    std::string outputPathBoundary = "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/Cavity_Detection/Media/boundary.pcd";
-    std::string outputPathOuter = "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/Cavity_Detection/Media/outer.pcd";
-    std::string outputPathInner1 = "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/Cavity_Detection/Media/inner_1.pcd";
-    std::string outputPathInner2 = "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/Cavity_Detection/Media/inner_2.pcd";
-    std::string outputPathPotentialSegment1 = "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/Cavity_Detection/Media/potential_segment_1.pcd";
-    std::string outputPathPotentialSegment2 = "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/Cavity_Detection/potential_segment_2.pcd";
-    std::string outputPathPotentialSegment3 = "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/Cavity_Detection/potential_segment_3.pcd";
-
-    std::string outputPathGrasp1= "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/BoundaryEstimation/grasp_segment_1.pcd";
-    std::string outputPathGrasp2= "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/BoundaryEstimation/grasp_segment_2.pcd";
-    std::string outputPathGrasp3= "/home/krutarth-trivedi/Grasping-of-Unknown-Objects-using-Top-Surfaces/Algorithms/BoundaryEstimation/grasp_segment_3.pcd";
-
+    std::string inputPath = "/home/krutarth-trivedi/Benchmarking-vision-based-robotic-manipulation/Algorithms/Cavity_Detection/Media/object.pcd";
+    std::string outputPathFiltered = "/home/krutarth-trivedi/Benchmarking-vision-based-robotic-manipulation/Algorithms/Cavity_Detection/Media/filtered.pcd";
+    std::string outputPathBoundary = "/home/krutarth-trivedi/Benchmarking-vision-based-robotic-manipulation/Algorithms/Cavity_Detection/Media/boundary.pcd";
+    std::string outputPathOuter = "/home/krutarth-trivedi/Benchmarking-vision-based-robotic-manipulation/Algorithms/Cavity_Detection/Media/outer.pcd";
+    std::string outputPathInner1 = "/home/krutarth-trivedi/Benchmarking-vision-based-robotic-manipulation/Algorithms/Cavity_Detection/Media/inner_1.pcd";
+    std::string outputPathInner2 = "/home/krutarth-trivedi/Benchmarking-vision-based-robotic-manipulation/Algorithms/Cavity_Detection/Media/inner_2.pcd";
+  
     pcl::PCDReader reader;
     pcl::PCDWriter writer;
 
@@ -289,7 +288,7 @@ int main (int argc, char** argv)
 
 
     /*************** Run the cavity detection algorithm ****************/    
-    //Ideally, this logical part should be designed in a way that, the algorithm runs iteratively untill it assignes each point
+    //NB: Ideally, this logical part should be designed in a way that, the algorithm runs iteratively untill it assignes each point
     //to anyone of the clusters. Right now, as the object geometry is known, some part is hard-coded.
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr outer_boundary (new pcl::PointCloud<pcl::PointXYZRGB>);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr remainedPoints (new pcl::PointCloud<pcl::PointXYZRGB>);
